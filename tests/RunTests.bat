@@ -19,5 +19,13 @@
 ::
 ::-------------------------------------------------------------------------------
 ::
-call pybot --name "AutoItLibrary Windows Calculator" --noncritical ExpectedFAIL --outputdir .\results .
+setlocal
+for /f "tokens=4-5 delims=. " %%i in ('ver') do set VERSION=%%i.%%j
+if "%version%" == "10.0" (
+    call pybot --name "AutoItLibrary Windows Calculator" --noncritical ExpectedFAIL --outputdir .\results Win10_Calculator_Test_Cases.robot Notepad.robot
+) else (
+    call pybot --name "AutoItLibrary Windows Calculator" --noncritical ExpectedFAIL --outputdir .\results Calculator_Test_Cases.html Notepad.robot
+)
+endlocal
+
 pause

@@ -24,6 +24,7 @@ from distutils.core      import setup
 from distutils.sysconfig import get_python_lib
 import sys
 import os
+import platform
 import shutil
 import subprocess
 
@@ -37,7 +38,7 @@ Topic :: Software Development :: Testing
 
 DESCRIPTION = """
 AutoItLibrary is a Robot Framework keyword library wrapper for for the
-freeware AutoIt tool (http://www.autoitscript.com/autoit3/index.shtml)
+freeware AutoIt tool (https://www.autoitscript.com/site/autoit/)
 using AutoIt's AutoItX.dll COM object. The AutoItLibrary class
 provides a proxy for the AutoIt keywords callable on the AutoIt COM
 object and provides additional high-level keywords implemented as
@@ -51,36 +52,54 @@ if __name__ == "__main__":
     if sys.argv[1].lower() == "install" :
         if os.name == "nt" :
             #
+            # Make sure we have win32com installed
+            #
+            try:
+                from win32com.shell import shell
+            except:
+                print("AutoItLibrary requires pywin32. See https://sourceforge.net/projects/pywin32/files/pywin32/.")
+                sys.exit(2)
+
+            #
+            # Make sure we are admin
+            #
+            if not shell.IsUserAnAdmin():
+                print("The setup script needs to be run as administrator to be able to register the COM Objects")
+                sys.exit(2)
+
+            #
+            # Pick the right bitness dll
+            #
+            if (platform.architecture()[0] == "32bit"):
+                dllFile = "AutoItX3.dll"
+            else:
+                dllFile = "AutoItX3_x64.dll"
+
+            #
             # Install and register AutoItX
             #
-            if os.path.isfile(os.path.join(get_python_lib(), "AutoItLibrary/lib/AutoItX3.dll")) :
-                print "Don't think we need to unregister the old one..."
-
+            print("Registering AutoItX dll")
             instDir = os.path.normpath(os.path.join(get_python_lib(), "AutoItLibrary/lib"))
             if not os.path.isdir(instDir) :
                 os.makedirs(instDir)
-            instFile = os.path.normpath(os.path.join(instDir, "AutoItX3.dll"))
-            shutil.copyfile("3rdPartyTools/AutoIt/AutoItX3.dll", instFile)
+            instFile = os.path.normpath(os.path.join(instDir, dllFile))
+            scriptDir = os.path.dirname(os.path.realpath(sys.argv[0]))
+            shutil.copyfile(scriptDir + "\\3rdPartyTools\\AutoIt\\" + dllFile, instFile)
             #
             # Register the AutoItX COM object
             # and make its methods known to Python
             #
-            cmd = r"%SYSTEMROOT%\system32\regsvr32.exe /S " + instFile
-            print cmd
+            os.chdir(instDir)
+            cmd = r"%SYSTEMROOT%\system32\regsvr32.exe /S " + dllFile
+            print(cmd)
             subprocess.check_call(cmd, shell=True)
             makepy = os.path.normpath(os.path.join(get_python_lib(), "win32com/client/makepy.py"))
-            #
-            # Make sure we have win32com installed
-            #
-            if not os.path.isfile(makepy) :
-                print "AutoItLibrary requires win32com. See http://starship.python.net/crew/mhammond/win32/."
-                sys.exit(2)
 
-            cmd = "python %s %s" % (makepy, instFile)
-            print cmd
+            cmd = "python \"%s\" %s" % (makepy, dllFile)
+            print(cmd)
             subprocess.check_call(cmd)
         else :
-            print "AutoItLibrary cannot be installed on non-Windows platforms."
+            print("AutoItLibrary cannot be installed on non-Windows platforms.")
             sys.exit(2)
     #
     # Figure out the install path
@@ -89,12 +108,13 @@ if __name__ == "__main__":
     #
     # Do the distutils installation
     #
+    os.chdir(scriptDir)
     setup(name         = "AutoItLibrary",
-          version      = "1.1",
+          version      = "1.2",
           description  = "AutoItLibrary for Robot Framework",
           author       = "Martin Taylor",
           author_email = "cmtaylor@ti.com",
-          url          = "http://code.google.com/p/robotframework-autoitlibrary/",
+          url          = "https://github.com/CMTaylor/robotframework-autoitlibrary",
           license      = "Apache License 2.0",
           platforms    = "Microsoft Windows",
           classifiers  = CLASSIFIERS.splitlines(),
@@ -106,14 +126,15 @@ if __name__ == "__main__":
                               "COPYRIGHT.txt",
                               "LICENSE.txt",
                               "doc/AutoItLibrary.html",
-                              "3rdPartyTools/AutoIt/Au3Info.exe",
+                              "3rdPartyTools/AutoIt/Au3Info.exe" if platform.architecture()[0] == "32bit" else "3rdPartyTools/AutoIt/Au3Info_x64.exe",
                               "3rdPartyTools/AutoIt/AutoItX.chm",
-                              "3rdPartyTools/AutoIt/AutoIt_License.html",
+                              "3rdPartyTools/AutoIt/AutoIt_License.html"
                              ]),
                            (os.path.join(destPath, "tests"),
                              ["tests/CalculatorGUIMap.py",
                               "tests/__init__.html",
                               "tests/Calculator_Test_Cases.html",
+                              "tests/Win10_Calculator_Test_Cases.robot",
                               "tests/RobotIDE.bat",
                               "tests/RunTests.bat"
                              ]),

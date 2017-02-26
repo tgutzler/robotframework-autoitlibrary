@@ -5,19 +5,19 @@ Introduction
 ------------
 
 AutoItLibrary is a Python keyword library that extends Robot Framework
-(http://code.google.com/p/robotframework/) by providing keywords based on the
-COM interface to AutoIt (http://www.autoitscript.com/autoit3/index.shtml).
+(http://robotframework.org/) by providing keywords based on the
+COM interface to AutoIt (https://www.autoitscript.com/site/autoit/).
 AutoIt is a freeware tool for automating the Windows GUI.
 
-In order to do screenshots, the AutoItLibrary uses the Open Source Python
-Image Library tool PIL (http://www.pythonware.com/products/pil/).
-
+In order to do screenshots, the AutoItLibrary uses "The friendly PIL fork"
+pillow: https://python-pillow.org/.
 
 Installation
 ------------
 
 AutoItLibrary installs its own file and, if not already present, the 3rd party
-AutoIt and PIL tools.  To install, unzip the release file into a temporary
+AutoIt. The pillow tools are optional and must be installed separately if
+screenshots are required. To install, unzip the release file into a temporary
 directory on your PC, open a command window in that directory and type:
 
     python setup.py install
